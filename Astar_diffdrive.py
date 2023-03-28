@@ -97,7 +97,6 @@ def next_node(node,Ul,Ur):
     Thetafin = 180 * (Theta)/math.pi
     return X,Y,Thetafin,Dist
 
-#Function to move forward
 def Left_purerot_RPM1(node,goal,actions):
     action = actions[0]
     new_x,new_y,new_theta,dist = next_node(node,action[0],action[1])
