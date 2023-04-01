@@ -1,0 +1,9 @@
+
+<launch>
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include file="$(find astar)/launch/turtlebot_world.launch">
+    <arg name="world_file" value="$(find astar)/world/map.world"/>
+    <!-- more default parameters can be changed here -->
+    
+  </include>
+</launch>
