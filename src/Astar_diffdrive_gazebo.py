@@ -7,21 +7,22 @@ Authors : Vyshnav Achuthan (119304815)
 """
 import math
 import heapq
-from obstacle_gen import obs_coord
+from obstacle_gen_gazebo import obs_coord
 import pygame
 import numpy as np
 # Define the robot radius, clearance, tolerance, and goal tolerance
-ROBOT_RADIUS = 0.105
-ROBOT_WHEEL_RADIUS = 0.033
-ROBOT_WHEEL_DIST = 0.160
+ROBOT_RADIUS = 0.15
+ROBOT_WHEEL_RADIUS = 0.038
+ROBOT_WHEEL_DIST = 0.354
 OBSTACLE_CLEARANCE = 5
 VISITED_TOLERANCE = 0.5
 ORIENTATION_TOLERANCE = 30
 GOAL_TOLERANCE = 1.5
 MAP_WIDTH = 599
-MAP_HEIGHT = 249
+MAP_HEIGHT = 199
 heap = []   #Open list
-visited = np.zeros((1200,500,12)) #Closed list
+visited = np.zeros((1200,400,12)) #Closed list
+
 
 class Node:
     def __init__(self):
@@ -263,7 +264,7 @@ def Move_Rotate_RPM2_RPM1(node,goal,actions):
 
 
 #Backtracking
-def backtrack(node):
+def backtrack(node,actions):
     path = []
     path.append(node)
     print(node.state)
@@ -272,10 +273,13 @@ def backtrack(node):
         path.append(node)
         print(node.state)
     print("Done backtracking")
-    visualize(path)
+    visualize(path,actions)
+    return path
+    
 
 #Astra logic using priority queue
 def astar(start, goal,actions):
+    path = []
     heapq.heappush(heap, (start))
     while heap:
         curr_node = heapq.heappop(heap)
@@ -284,7 +288,7 @@ def astar(start, goal,actions):
         
             if reached_goal(curr_node, goal):
                 print("Goal reached, Backtracking")
-                backtrack(curr_node)
+                path =backtrack(curr_node,actions)
                 break                           #Backtracking
         
             if is_visited(curr_node, visited):
@@ -300,14 +304,14 @@ def astar(start, goal,actions):
             moveforward_RPM2(curr_node,goal,actions)
             Move_Rotate_RPM1_RPM2(curr_node,goal,actions)
             Move_Rotate_RPM2_RPM1(curr_node,goal,actions)      
-    return None
+    return path
 
-def visualize(path_gen): #Function to visualize the graph
+def visualize(path_gen,actions): #Function to visualize the graph
     pygame.init()
 
-    # Set the window dimensions
+        # Set the window dimensions
     WINDOW_WIDTH = 600
-    WINDOW_HEIGHT = 250
+    WINDOW_HEIGHT = 200
 
     # Create the Pygame window
     window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -327,28 +331,36 @@ def visualize(path_gen): #Function to visualize the graph
 
     # Fill the surface with the background color
     surface.fill(BACKGROUND_COLOR)
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,0,5,250))
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (595,0,5,250))
+    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,0,5,200))
+    pygame.draw.rect(surface, CLEARANCE_COLOR, (595,0,5,200))
     pygame.draw.rect(surface, CLEARANCE_COLOR, (0,0,600,5))
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,245,600,5))
+    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,195,600,5))
+    pygame.draw.rect(surface, CLEARANCE_COLOR, pygame.Rect(250-5, 70-5, 15+10, 125+10))
+    pygame.draw.rect(surface, CLEARANCE_COLOR, pygame.Rect(150-5, 5-5, 15+10, 125+10))
+    pygame.draw.circle(surface,CLEARANCE_COLOR,(400,90),55)
+    # obs.append(pygame.draw.polygon(surface,color1,Trianlge1))
 
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,0,5,250))
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (100-5, 145-5,50+10 ,100+10))
-    pygame.draw.polygon(surface, CLEARANCE_COLOR, ((300,200+5),(365+4,162),(365+4,87),(300,50-5),(235-4,87),(235-4,162))) 
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (100-5,5-5,50+10,100+10))                                                                #Printing directly using the coordinates for visualization.
-    pygame.draw.polygon(surface, CLEARANCE_COLOR, ((460-3,225+12),(460-3,25-12),(510+5,125)))
-    # Draw the obstacles on the surface
-    pygame.draw.rect(surface, OBSTACLE_COLOR, (100, 145,50 ,100))  
-    pygame.draw.polygon(surface, OBSTACLE_COLOR, ((300,200),(365,162),(365,87),(300,50),(235,87),(235,162)))
-    pygame.draw.rect(surface, OBSTACLE_COLOR, (100,5,50,100))
-    pygame.draw.polygon(surface, OBSTACLE_COLOR, ((460,225),(460,25),(510,125)))   
 
-    for idx,any in enumerate(heap):
+    #initialize Shapes
+    
+    (pygame.draw.rect(surface, OBSTACLE_COLOR, pygame.Rect(250, 70, 15, 125)))
+    (pygame.draw.rect(surface, OBSTACLE_COLOR, pygame.Rect(150, 5, 15, 125)))
+    (pygame.draw.circle(surface,OBSTACLE_COLOR,(400,90),50))
+
+    for idx,any in enumerate(path_gen):
         if(any.parent is not None):
             start_pos = (any.parent.state[0],any.parent.state[1])
-            print(start_pos)
-            end_pos = (any.state[0],any.state[1])
-            pygame.draw.line(surface,VISITED_COLOR,start_pos,end_pos,2)
+            for i in range(0,8):
+                x1,y1,theta,dist = next_node(any.parent,actions[i][0],actions[i][1])
+                if(x1> MAP_WIDTH or y1>MAP_HEIGHT):
+                    continue
+                else:
+                    if(is_obstacle(x1,y1)):
+                        continue
+            #print(start_pos)
+                    end_pos = (x1,y1)
+                    pygame.draw.line(surface,VISITED_COLOR,start_pos,end_pos,2)
+                    #pygame.time.wait(10)
             pygame.draw.rect(surface,PIXEL_COLOR,(any.state[0],any.state[1],1,1))
             window.blit(surface,(0,0))
             # pygame.display.flip()
@@ -388,7 +400,7 @@ def get_startcoord_input(): #function to get start coordinates from user
     x = int(input("Enter x-ccordinate of start position:"))
     y = int(input("Enter y coordinate of start position:"))
     theta = int(input("Enter start orientation in multiples of 30:"))
-    y = 249-y
+    y = 200-y
     if(theta%30 !=0):
         print("orientation should be in multiples of 30")
         return [flag]
@@ -405,7 +417,7 @@ def get_goalcoord_input(): #Function to get goal coordinates from user
     xg = int(input("Enter x-ccordinate of goal position:"))
     yg = int(input("Enter y coordinate of goal position:"))
     theta_g =int(input("Enter goal orientation in multiples of 30"))
-    yg = 249-yg
+    yg = 200-yg
     if(theta_g%30 !=0):
         print("orientation should be in multiples of 30")
         return [flag]
