@@ -22,6 +22,7 @@ MAP_WIDTH = 599
 MAP_HEIGHT = 249
 heap = []   #Open list
 visited = np.zeros((1200,500,12)) #Closed list
+visited_nodes = []
 
 class Node:
     def __init__(self):
@@ -29,7 +30,7 @@ class Node:
         self.parent = None
         self.cost_to_come = float('inf')
         self.cost_to_goal = float('inf')
-       
+    
     def __lt__(self, other):
         return (self.cost_to_goal + self.cost_to_come) < (other.cost_to_goal + other.cost_to_come)
 
@@ -40,10 +41,10 @@ def is_obstacle(x,y):
         #print("On obstacle")
         return True
     else:
-        ind1 = obs_coord(x+ROBOT_RADIUS,y)
-        ind2 = obs_coord(x,y+ROBOT_RADIUS)
-        ind3 = obs_coord(x-ROBOT_RADIUS,y)
-        ind4 = obs_coord(x,y-ROBOT_RADIUS)
+        ind1 = obs_coord(x+ROBOT_RADIUS+((ROBOT_WHEEL_DIST/2)-ROBOT_RADIUS),y)
+        ind2 = obs_coord(x,y+ROBOT_RADIUS+((ROBOT_WHEEL_DIST/2)-ROBOT_RADIUS))
+        ind3 = obs_coord(x-ROBOT_RADIUS+((ROBOT_WHEEL_DIST/2)-ROBOT_RADIUS),y)
+        ind4 = obs_coord(x,y-ROBOT_RADIUS+((ROBOT_WHEEL_DIST/2)-ROBOT_RADIUS))
         if(ind1 or ind2 or ind3 or ind4 == 1):
             return True
         else:
@@ -279,6 +280,7 @@ def astar(start, goal,actions):
     heapq.heappush(heap, (start))
     while heap:
         curr_node = heapq.heappop(heap)
+        visited_nodes.append([round(curr_node.state[0]),round(curr_node.state[1])])
         print("Searching :",curr_node.state)
         if is_valid_node(curr_node):
         
@@ -343,21 +345,12 @@ def visualize(path_gen): #Function to visualize the graph
     pygame.draw.rect(surface, OBSTACLE_COLOR, (100,5,50,100))
     pygame.draw.polygon(surface, OBSTACLE_COLOR, ((460,225),(460,25),(510,125)))   
 
-    for idx,any in enumerate(path_gen):
-        if(any.parent is not None):
-            start_pos = (any.parent.state[0],any.parent.state[1])
-            for i in range(0,8):
-                x1,y1,theta,dist = next_node(any.parent,actions[i][0],actions[i][1])
-                if(x1> MAP_WIDTH or y1>MAP_HEIGHT):
-                    continue
-                else:
-                    if(is_obstacle(x1,y1)):
-                        continue
-            #print(start_pos)
-                    end_pos = (x1,y1)
-                    pygame.draw.line(surface,VISITED_COLOR,start_pos,end_pos,2)
+    new_set = list(set(tuple(x) for x in visited_nodes))
+    for idx,any in enumerate(new_set):
+        
+            pygame.draw.rect(surface,VISITED_COLOR,(any[0],any[1],1,1))
                     #pygame.time.wait(10)
-            pygame.draw.rect(surface,PIXEL_COLOR,(any.state[0],any.state[1],1,1))
+            #pygame.draw.rect(surface,PIXEL_COLOR,(any.state[0],any.state[1],1,1))
             window.blit(surface,(0,0))
             # pygame.display.flip()
             pygame.display.update()
