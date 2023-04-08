@@ -271,7 +271,7 @@ def backtrack(node,actions):
         path.append(node)
         print(node.state)
     print("Done backtracking")
-    # visualize(path,actions)
+    visualize(path,actions)
     return path
 
 #Astra logic using priority queue
@@ -285,7 +285,7 @@ def astar(start, goal,actions):
         
             if reached_goal(curr_node, goal):
                 print("Goal reached, Backtracking")
-                path = backtrack(curr_node,actions)
+                backtrack(curr_node)
                 break                           #Backtracking
         
             if is_visited(curr_node, visited):

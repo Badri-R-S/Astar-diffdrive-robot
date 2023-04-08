@@ -85,8 +85,8 @@ def main(args):
   start_pos.parent = None
   start_pos.cost_to_come = 0
   start_pos.cost_to_goal = 1000000
-  goal_pos = (x_g,200-y_g,0.0)
-  rpm1, rpm2 = 2, 3 #RPM's
+  goal_pos = (x_g, y_g,0.0)
+  rpm1, rpm2 = 20, 30 #RPM's
   all_actions = [(0, rpm1), (rpm1, 0), (rpm1, rpm1), (0, rpm2), (rpm2, 0), (rpm2, rpm2), (rpm1, rpm2), (rpm2, rpm1)]
 
   path = astar(start_pos, goal_pos,all_actions) #Getting path after performing Astar

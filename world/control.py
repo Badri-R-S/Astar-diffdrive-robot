@@ -1,124 +1,116 @@
-
+import sys
 import rospy
 import tf
 from Astar_diffdrive import *
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+import tf
+import math
+from tf import transformations
 
-class SubscriberOdom:
-        def __init__(self):
-            self.x = None
-            self.y = None
-            self.z = None
-            self.subscriber = rospy.Subscriber("odom",Odometry,self.odom_callback)
-        def odom_callback(self,data):
-            self.x = data.pose.pose.position.x
-            self.y = data.pose.pose.position.y
-            self.z = data.pose.pose.orientation.z
+x = 0.0
+y = 0.0 
+theta = 0.0
 
+def newOdom(msg):
+    global x      #Odometry callback funtction
+    global y
+    global theta
 
-def pause(listener):
-    listener.waitForTransform('/odom', '/base_footprint',
-                                            rospy.Time(), rospy.Duration(500))
+    x = msg.pose.pose.position.x
+    y = msg.pose.pose.position.y
 
-def cmd_vel(linear_vel,angular_vel,target_pos_x,target_pos_y,target_theta,odom_obj,velocity_publisher):
-      vel = Twist()
-#     while(x)
-#     rospy.sleep(1)
-      x = odom_obj.x
-      y = odom_obj.y
-      ang_z = odom_obj.z
-      print("x = ",x)
-      print("y = ",y)
-      print("ori = ",ang_z)
-      while(ang_z - target_theta<0.1):
-        vel.angular.z = angular_vel
-        velocity_publisher.publish(vel)
-      vel.angular.z = 0
-      velocity_publisher.publish(vel)
-      while True:
-        x = odom_obj.x
-        y = odom_obj.y       
-        dist = math.sqrt((target_pos_x - x)**2 + (target_pos_y - y)**2)
-        if dist < 0.1 :
-              vel.linear.x = 0
-              vel.linear.y = 0
-              velocity_publisher.publish(vel)
-              return
-        else:
-             vel.linear.x = linear_vel
-             velocity_publisher.publish(vel)
+    rot_q = msg.pose.pose.orientation
+    (roll, pitch, theta) = transformations.euler_from_quaternion([rot_q.x, rot_q.y, rot_q.z, rot_q.w])  #Getting yaw 
 
-def main():
-    rospy.init_node('controller')
-    listener = tf.TransformListener()
-    velocity_publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10)
-    x_s, y_s, theta_start = 50, 100, 0
-    x_g, y_g = 150, 200
-    start_pos = Node()
-    start_pos.state = [x_s,y_s,theta_start]
-    start_pos.parent = None
-    start_pos.cost_to_come = 0
-    start_pos.cost_to_goal = 1000000
-    goal_pos = (x_g, y_g)
-    rpm1, rpm2 = 20, 30
+def move_tbot3(veocity_publisher,path):
 
-    all_actions = [(0, rpm1), (rpm1, 0), (rpm1, rpm1), (0, rpm2), (rpm2, 0), (rpm2, rpm2), (rpm1, rpm2), (rpm2, rpm1)]
+    speed = Twist()
 
-    path, explore = astar(start_pos, goal_pos,all_actions)
+    r = rospy.Rate(4)
+    n = len(path[1:])
+    print(n)
+    i = 0
+    for node in path[1:]: #For each node in the path
+        print("i=",i)    
+        target_xpos = node.state[0]
+        target_ypos = node.state[1]
+        print("target_x = ",target_xpos)
+        print("target_y = ",target_ypos)
+        while True:
+            angle_to_goal = math.atan2(target_ypos-y, target_xpos-x)  #Angle between robot's current orientation and target orientation
+            dist = math.sqrt((target_xpos-x)**2 + (target_ypos-y)**2) #Distance between current position and target position
+            if(dist<0.1):
+                
+                speed.linear.x = 0.0
+                speed.angular.z = 0.0
+                veocity_publisher.publish(speed)
+                print("reached target")           #0.1 tolerance
+                print("x = ",target_xpos)
+                print("y = ",target_ypos)
+                print("x_robot = ",x)
+                print("y_robot = ",y)
+                break
+            else:
+                if abs(math.atan2(target_ypos-y, target_xpos-x) - theta) > 0.2:
+                    speed.linear.x = 0.0
+                    speed.angular.z = (math.atan2(target_ypos-y, target_xpos-x)-theta)*0.5  #Publishing angular and linear velocities proportional to the distance and orientation
+                else:
+                    speed.angular.z = 0.0
+                    speed.linear.x = math.sqrt((target_xpos-x)**2 + (target_ypos-y)**2)*0.5
+            veocity_publisher.publish(speed)
+            r.sleep()
+            if i == n-1 and (math.sqrt((target_xpos-x)**2 + (target_ypos-y)**2)<0.1):
+               print("dist to goal:", math.sqrt((target_xpos-x)**2 + (target_ypos-y)**2))  #Last point
+               speed.linear.x =0
+               speed.angular.z = 0
+               veocity_publisher.publish(speed)
+               print("Goal reached")
+               exit()
+        i = i+1    
 
+   
 
-    print('\n path found')
-    print('\n running')
-    rospy.sleep(10)
+def main(args):
 
-    pause(listener)
-    rate = rospy.Rate(1)
+  rospy.init_node('controller')     #Initializing node
+  velocity_publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10) #creating velocity publisher
+  odom_sub = rospy.Subscriber('/odom', Odometry, newOdom)  #Odometry subscriber
+  x_s, y_s, theta_start = 50, 100, 0 #Starting point
+  x_g, y_g = 550, 100 #Goal
+  start_pos = Node()
+  start_pos.state = [x_s,y_s,theta_start]
+  start_pos.parent = None
+  start_pos.cost_to_come = 0
+  start_pos.cost_to_goal = 1000000
+  goal_pos = (x_g, 200-y_g,0.0)
+  rpm1, rpm2 = 2, 3 #RPM's
+  all_actions = [(0, rpm1), (rpm1, 0), (rpm1, rpm1), (0, rpm2), (rpm2, 0), (rpm2, rpm2), (rpm1, rpm2), (rpm2, rpm1)]
 
-    r = 0.038 #in metres
-    L = 0.354 #in metres
-    dt = 10
-    pi = math.pi
+  path = astar(start_pos, goal_pos,all_actions) #Getting path after performing Astar
+  path.reverse()
+  for node in path:
+    print(node.state)
+  print('\n path found')
+  print('\n running')
 
-    for node in path[1:]:
-        if(node.actions=='LPR'):
-                UL = 0
-                UR = rpm1
-        elif(node.actions=='RPR'):
-                UL = rpm1
-                UR = 0
-        elif(node.actions=='MF'):
-                UL = rpm1
-                UR = rpm1
-        elif(node.actions=='LPR2'):
-                UL = 0
-                UR = rpm2
-        elif(node.actions=='RPR2'):
-                UL = rpm2
-                UR = 0
-        elif(node.actions=='MF2'):
-                UL = rpm2
-                UR = rpm2
-        elif(node.actions=='MRP1P2'):
-                UL = rpm1
-                UR = rpm2
-        elif(node.actions=='MRP1P2'):
-                UL = rpm2
-                UR = rpm1
-        odom_obj = SubscriberOdom()
-        rospy.spin()   
-        x, y, theta = node.state[0],node.state[1],math.pi * node.state[2] / 180               
-        theta_dot = (r / L) * (UR - UL) 
-        velocity_value_linear = (r / 2) * (UL + UR)
-        cmd_vel(velocity_value_linear, theta_dot,x,y,theta,odom_obj,velocity_publisher)
-        rate.sleep(1)
+  #print(traverse_list)
+  for node in path: 
+    node.state[0] = node.state[0]/100.0-0.5     #Transforming coordinates from -d world to gazebo world
+    node.state[1] = (200-node.state[1])/100.0-1
 
-    cmd_vel(0, 0)
+  #print(traverse_list)
+   
+#   print((traverse_list[2][1] - y_pose)/((traverse_list[2][0] - x_pose) + 1e0-7))
+  while (not rospy.is_shutdown()):
 
-main()
-
-if __name__ == '_main_':
     try:
-        main()
-    except rospy.ROSInterruptException:
-        rospy.loginfo("Task terminated.")
+
+        move_tbot3(velocity_publisher, path) 
+
+    except KeyboardInterrupt:
+        print("Shutting down")
+
+
+if __name__ == '__main__':
+    main(sys.argv)
