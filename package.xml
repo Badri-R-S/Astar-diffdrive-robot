@@ -1,5 +1,5 @@
 <package format="2">
-  <name>astar</name>
+  <name>astar_diffdrive_robot</name>
   <version>1.0.0</version>
   <description>
     <p>URDF Description package for surg3</p>
