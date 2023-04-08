@@ -1,0 +1,36 @@
+<package format="2">
+  <name>astar_diffdrive_robot</name>
+  <version>1.0.0</version>
+  <description>
+    <p>Description package for A* DiffDrive</p>
+  </description>
+  <author>Vyshnav Achuthan</author>
+  <author>Badrinarayan</author>
+
+  <maintainer email="kkk@umd.edu" />
+  <license>BSD</license>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- <build_depend>message_generation</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>urdf</build_depend>
+  <build_depend>xacro</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <depend>roslaunch</depend>
+  <depend>robot_state_publisher</depend>
+  <depend>rviz</depend>
+  <depend>joint_state_publisher</depend>
+  <depend>joint_state_publisher_gui</depend>
+  <depend>gazebo</depend>
+  <depend>moveit_simple_controller_manager</depend> -->
+
+
+  <export>
+    <architecture_independent />
+  </export>
+</package>
