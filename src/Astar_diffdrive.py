@@ -63,9 +63,7 @@ def reached_goal(node, goal):
     dy = node.state[1] - goal[1]
     dist_to_goal = math.sqrt(dx**2 + dy**2)
     return (dist_to_goal <= GOAL_TOLERANCE)
-# Define get_cost function
-def get_cost(current_node, neighbor_node):
-    return math.sqrt((current_node.x - neighbor_node.x)**2 + (current_node.y - neighbor_node.y)**2)
+
 
 # Define is_valid_node function
 def is_valid_node(node):
@@ -349,11 +347,12 @@ def visualize(path_gen): #Function to visualize the graph
     for idx,any in enumerate(new_set):
         
             pygame.draw.rect(surface,VISITED_COLOR,(any[0],any[1],1,1))
-                    #pygame.time.wait(10)
+                    
             #pygame.draw.rect(surface,PIXEL_COLOR,(any.state[0],any.state[1],1,1))
             window.blit(surface,(0,0))
             # pygame.display.flip()
             pygame.display.update()
+            #pygame.time.wait(5)
     
     for idx,every in enumerate(path_gen):
         if(every.parent is not None):
@@ -405,11 +404,7 @@ def get_goalcoord_input(): #Function to get goal coordinates from user
     flag = False
     xg = int(input("Enter x-ccordinate of goal position:"))
     yg = int(input("Enter y coordinate of goal position:"))
-    theta_g =int(input("Enter goal orientation in multiples of 30"))
     yg = 249-yg
-    if(theta_g%30 !=0):
-        print("orientation should be in multiples of 30")
-        return [flag]
     if(xg<0 or xg>=600 or yg<0 or yg>=250):
         print("Goal coordinates out of bounds, Please enter x and y coordinates again")
         return [flag]
@@ -417,7 +412,7 @@ def get_goalcoord_input(): #Function to get goal coordinates from user
         print("goal coordinates on an obstacle, Please enter x and y coordinates again")
         return [flag]
     else:
-        return [True,xg,yg,theta_g]
+        return [True,xg,yg]
 
 if __name__ == "__main__":
     node = Node()
@@ -429,7 +424,7 @@ if __name__ == "__main__":
     goal_input = []
     while(a not in goal_input):
         goal_input = get_goalcoord_input()
-    goal = [goal_input[1],goal_input[2],goal_input[3]]
+    goal = [goal_input[1],goal_input[2]]
     node.parent = None
     node.cost_to_come = 0
     node.cost_to_goal = 100000
