@@ -12,7 +12,7 @@
   <!-- <arg name="rpm2" default="30"/> -->
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="/home/badri/Desktop/ENPM 661/Astar-diffdrive-robot/world/map.world"/>
+    <arg name="world_name" value="/home/badri/Desktop/map.world"/>
     <arg name="paused" value="false"/>
     <arg name="use_sim_time" value="true"/>
     <arg name="gui" value="true"/>

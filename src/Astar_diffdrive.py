@@ -271,7 +271,8 @@ def backtrack(node):
         path.append(node)
         print(node.state)
     print("Done backtracking")
-    visualize(path)
+    visualize(path,actions)
+    return path
 
 #Astra logic using priority queue
 def astar(start, goal,actions):
@@ -284,7 +285,7 @@ def astar(start, goal,actions):
         
             if reached_goal(curr_node, goal):
                 print("Goal reached, Backtracking")
-                backtrack(curr_node)
+                path= backtrack(curr_node)
                 break                           #Backtracking
         
             if is_visited(curr_node, visited):
@@ -300,9 +301,9 @@ def astar(start, goal,actions):
             moveforward_RPM2(curr_node,goal,actions)
             Move_Rotate_RPM1_RPM2(curr_node,goal,actions)
             Move_Rotate_RPM2_RPM1(curr_node,goal,actions)      
-    return None
+    return path
 
-def visualize(path_gen): #Function to visualize the graph
+def visualize(path_gen,actions): #Function to visualize the graph
     pygame.init()
 
     # Set the window dimensions

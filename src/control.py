@@ -1,7 +1,7 @@
 import sys
 import rospy
 import tf
-from Astar_diffdrive_gazebo import *
+from Astar_diffdrive import *
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 import tf
@@ -77,14 +77,14 @@ def main(args):
   velocity_publisher = rospy.Publisher('cmd_vel', Twist, queue_size=10) #creating velocity publisher
   odom_sub = rospy.Subscriber('/odom', Odometry, newOdom)  #Odometry subscriber
   x_s, y_s, theta_start = 50, 100, 0 #Starting point
-  x_g, y_g = 185, 100 #Goal
+  x_g, y_g = 550, 100 #Goal
   start_pos = Node()
   start_pos.state = [x_s,y_s,theta_start]
   start_pos.parent = None
   start_pos.cost_to_come = 0
   start_pos.cost_to_goal = 1000000
-  goal_pos = (x_g, y_g,0.0)
-  rpm1, rpm2 = 20, 30 #RPM's
+  goal_pos = (x_g,200- y_g,0.0)
+  rpm1, rpm2 = 2, 3 #RPM's
   all_actions = [(0, rpm1), (rpm1, 0), (rpm1, rpm1), (0, rpm2), (rpm2, 0), (rpm2, rpm2), (rpm1, rpm2), (rpm2, rpm1)]
 
   path = astar(start_pos, goal_pos,all_actions) #Getting path after performing Astar
