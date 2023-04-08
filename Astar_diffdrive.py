@@ -13,7 +13,7 @@ import pygame
 import numpy as np
 # Define the robot radius, clearance, tolerance, and goal tolerance
 ROBOT_RADIUS = 15
-ROBOT_WHEEL_RADIUS = 3.3
+ROBOT_WHEEL_RADIUS = 3.30
 ROBOT_WHEEL_DIST = 35.4
 OBSTACLE_CLEARANCE = 5
 VISITED_TOLERANCE = 0.5
@@ -272,7 +272,7 @@ def backtrack(node,actions):
         path.append(node)
         print(node.state)
     print("Done backtracking")
-    # visualize(path,actions)s
+    visualize(path,actions)
     return path
 
 #Astra logic using priority queue

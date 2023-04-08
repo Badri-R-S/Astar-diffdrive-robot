@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-
+#!/usr/bin/ python3
 import pygame
 import math
 import numpy as np
