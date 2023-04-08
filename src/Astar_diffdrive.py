@@ -1,4 +1,5 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+
 """
 #########################################################################################
 Authors : Vyshnav Achuthan (119304815)
@@ -271,7 +272,7 @@ def backtrack(node,actions):
         path.append(node)
         print(node.state)
     print("Done backtracking")
-    visualize(path,actions)
+    # visualize(path,actions)s
     return path
 
 #Astra logic using priority queue
@@ -285,7 +286,7 @@ def astar(start, goal,actions):
         
             if reached_goal(curr_node, goal):
                 print("Goal reached, Backtracking")
-                backtrack(curr_node)
+                path=backtrack(curr_node,actions)
                 break                           #Backtracking
         
             if is_visited(curr_node, visited):
