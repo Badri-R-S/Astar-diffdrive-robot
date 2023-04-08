@@ -7,21 +7,21 @@ Authors : Vyshnav Achuthan (119304815)
 """
 import math
 import heapq
-from obstacle_gen import obs_coord
+from obstacle_gen_gazebo import obs_coord
 import pygame
 import numpy as np
 # Define the robot radius, clearance, tolerance, and goal tolerance
-ROBOT_RADIUS = 0.15
-ROBOT_WHEEL_RADIUS = 0.033
-ROBOT_WHEEL_DIST = 0.354
+ROBOT_RADIUS = 15
+ROBOT_WHEEL_RADIUS = 3.3
+ROBOT_WHEEL_DIST = 35.4
 OBSTACLE_CLEARANCE = 5
 VISITED_TOLERANCE = 0.5
 ORIENTATION_TOLERANCE = 30
-GOAL_TOLERANCE = 1.5
+GOAL_TOLERANCE = 10
 MAP_WIDTH = 599
-MAP_HEIGHT = 249
+MAP_HEIGHT = 199
 heap = []   #Open list
-visited = np.zeros((1200,500,12)) #Closed list
+visited = np.zeros((1200,400,12)) #Closed list
 visited_nodes = []
 
 class Node:
@@ -278,7 +278,7 @@ def astar(start, goal,actions):
     heapq.heappush(heap, (start))
     while heap:
         curr_node = heapq.heappop(heap)
-        visited_nodes.append([round(curr_node.state[0]),round(curr_node.state[1])])
+        visited_nodes.append(curr_node)
         print("Searching :",curr_node.state)
         if is_valid_node(curr_node):
         
@@ -307,7 +307,7 @@ def visualize(path_gen): #Function to visualize the graph
 
     # Set the window dimensions
     WINDOW_WIDTH = 600
-    WINDOW_HEIGHT = 250
+    WINDOW_HEIGHT = 200
 
     # Create the Pygame window
     window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -324,35 +324,48 @@ def visualize(path_gen): #Function to visualize the graph
     # Create the surface for the obstacle course
     surface = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT))
     # pygame.display.flip()
-
+    color = pygame.Color("Yellow")
     # Fill the surface with the background color
     surface.fill(BACKGROUND_COLOR)
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,0,5,250))
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (595,0,5,250))
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,0,600,5))
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,245,600,5))
+    color1 = (255,255,255)
+    pygame.draw.rect(surface, color1, (0,0,5,200))
+    pygame.draw.rect(surface, color1, (595,0,5,200))
+    pygame.draw.rect(surface, color1, (0,0,600,5))
+    pygame.draw.rect(surface, color1, (0,195,600,5))
 
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (0,0,5,250))
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (100-5, 145-5,50+10 ,100+10))
-    pygame.draw.polygon(surface, CLEARANCE_COLOR, ((300,200+5),(365+4,162),(365+4,87),(300,50-5),(235-4,87),(235-4,162))) 
-    pygame.draw.rect(surface, CLEARANCE_COLOR, (100-5,5-5,50+10,100+10))                                                                #Printing directly using the coordinates for visualization.
-    pygame.draw.polygon(surface, CLEARANCE_COLOR, ((460-3,225+12),(460-3,25-12),(510+5,125)))
-    # Draw the obstacles on the surface
-    pygame.draw.rect(surface, OBSTACLE_COLOR, (100, 145,50 ,100))  
-    pygame.draw.polygon(surface, OBSTACLE_COLOR, ((300,200),(365,162),(365,87),(300,50),(235,87),(235,162)))
-    pygame.draw.rect(surface, OBSTACLE_COLOR, (100,5,50,100))
-    pygame.draw.polygon(surface, OBSTACLE_COLOR, ((460,225),(460,25),(510,125)))   
+    pygame.draw.rect(surface, color1, pygame.Rect(250-5, 70-5, 15+10, 125+10))
+    pygame.draw.rect(surface, color1, pygame.Rect(150-5, 5-5, 15+10, 125+10))
+    pygame.draw.circle(surface,color1,(400,90),55)
 
-    new_set = list(set(tuple(x) for x in visited_nodes))
-    for idx,any in enumerate(new_set):
-        
-            pygame.draw.rect(surface,VISITED_COLOR,(any[0],any[1],1,1))
-                    
-            #pygame.draw.rect(surface,PIXEL_COLOR,(any.state[0],any.state[1],1,1))
-            window.blit(surface,(0,0))
-            # pygame.display.flip()
-            pygame.display.update()
-            #pygame.time.wait(5)
+    pygame.draw.rect(surface, color, pygame.Rect(250, 70, 15, 125))
+    pygame.draw.rect(surface, color, pygame.Rect(150, 5, 15, 125))
+    pygame.draw.circle(surface,color,(400,90),50)
+    
+    for idx,any in enumerate(visited_nodes):
+            for i in range(0,8):
+                coord_list = []
+                flag = 0
+                t = 0
+                dt = 0.1
+                X=any.state[0]
+                Y=any.state[1]
+                coord_list.append([X,Y])
+                Theta = math.pi * any.state[2] / 180
+                while t<1:
+                    t = t+dt
+                    dx = 0.5*ROBOT_RADIUS * (actions[i][0] + actions[i][1]) * math.cos(Theta) * dt
+                    dy = 0.5*ROBOT_RADIUS * (actions[i][0] + actions[i][1]) * math.sin(Theta) * dt
+                    X += dx
+                    Y += dy
+                    coord_list.append([X,Y])
+                for every in coord_list:
+                    if(is_obstacle(every[0],every[1])):
+                        flag = 1
+                        break
+                if(flag == 0):
+                    pygame.draw.line(surface,VISITED_COLOR,(coord_list[0][0],coord_list[0][1]),(coord_list[-1][0],coord_list[-1][1]),2)
+                    window.blit(surface, (0, 0))
+                    pygame.display.update()
     
     for idx,every in enumerate(path_gen):
         if(every.parent is not None):
